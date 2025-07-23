@@ -2,6 +2,12 @@
 pragma solidity ^0.8.19;
 
 interface IBetManager {
+    enum Status {
+        Pending,
+        Resolved,
+        Cancelled
+    }
+
     function placeBet(address user, uint256 amount, bytes32 priceId, uint256 duration, bool isLong, int64 entryPrice)
         external
         returns (uint256 betId);
@@ -10,6 +16,6 @@ interface IBetManager {
     function getBet(uint256 betId)
         external
         view
-        returns (address user, uint256 amount, uint256 expiryTime, bool resolved);
+        returns (address user, uint256 amount, uint256 expiryTime, Status status);
     function canResolveBet(uint256 betId) external view returns (bool);
 }

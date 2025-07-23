@@ -16,9 +16,9 @@ contract BetManager is IBetManager, ReentrancyGuard, Ownable {
         uint256 entryTime;
         uint256 expiryTime;
         bool isLong;
-        bool resolved;
         bool won;
         address resolver;
+        Status status;
     }
 
     mapping(uint256 => Bet) public bets;
@@ -48,9 +48,9 @@ contract BetManager is IBetManager, ReentrancyGuard, Ownable {
             entryTime: block.timestamp,
             expiryTime: block.timestamp + duration,
             isLong: isLong,
-            resolved: false,
             won: false,
-            resolver: address(0)
+            resolver: address(0),
+            status: Status.Pending
         });
 
         userBets[user].push(betId);
@@ -66,7 +66,7 @@ contract BetManager is IBetManager, ReentrancyGuard, Ownable {
         returns (bool won, uint256 payout)
     {
         Bet storage bet = bets[betId];
-        require(!bet.resolved, "Already resolved");
+        require(bet.status == Status.Resolved, "Already resolved");
         require(block.timestamp >= bet.expiryTime, "Not expired");
 
         won = bet.isLong ? exitPrice > bet.entryPrice : exitPrice < bet.entryPrice;
@@ -75,7 +75,7 @@ contract BetManager is IBetManager, ReentrancyGuard, Ownable {
             payout = (bet.amount * PAYOUT_MULTIPLIER) / BASIS_POINTS;
         }
 
-        bet.resolved = true;
+        bet.status = Status.Resolved;
         bet.won = won;
         bet.resolver = resolver;
 
@@ -87,15 +87,15 @@ contract BetManager is IBetManager, ReentrancyGuard, Ownable {
         external
         view
         override
-        returns (address user, uint256 amount, uint256 expiryTime, bool resolved)
+        returns (address user, uint256 amount, uint256 expiryTime, Status status)
     {
         Bet memory bet = bets[betId];
-        return (bet.user, bet.amount, bet.expiryTime, bet.resolved);
+        return (bet.user, bet.amount, bet.expiryTime, bet.status);
     }
 
     function canResolveBet(uint256 betId) external view override returns (bool) {
         Bet memory bet = bets[betId];
-        return !bet.resolved && block.timestamp >= bet.expiryTime && bet.user != address(0);
+        return bet.status == Status.Pending && block.timestamp >= bet.expiryTime && bet.user != address(0);
     }
 
     function getUserBets(address user) external view returns (uint256[] memory) {
