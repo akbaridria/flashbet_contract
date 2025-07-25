@@ -13,6 +13,7 @@ interface IBetManager {
         returns (uint256 betId);
 
     function resolveBet(uint256 betId, int64 exitPrice, address resolver) external returns (bool won, uint256 payout);
+    function cancelBet(uint256 betId) external;
     function getBet(uint256 betId)
         external
         view

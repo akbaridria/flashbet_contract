@@ -66,7 +66,7 @@ contract BetManager is IBetManager, ReentrancyGuard, Ownable {
         returns (bool won, uint256 payout)
     {
         Bet storage bet = bets[betId];
-        require(bet.status == Status.Resolved, "Already resolved");
+        require(bet.status != Status.Resolved, "Already resolved");
         require(block.timestamp >= bet.expiryTime, "Not expired");
 
         won = bet.isLong ? exitPrice > bet.entryPrice : exitPrice < bet.entryPrice;
@@ -81,6 +81,15 @@ contract BetManager is IBetManager, ReentrancyGuard, Ownable {
 
         emit BetResolved(betId, resolver, won, payout);
         return (won, payout);
+    }
+
+    function cancelBet(uint256 betId) external override onlyOwner {
+        Bet storage bet = bets[betId];
+        require(bet.status == Status.Pending, "Cannot cancel");
+
+        bet.status = Status.Cancelled;
+
+        emit BetResolved(betId, msg.sender, false, 0);
     }
 
     function getBet(uint256 betId)
