@@ -4,22 +4,10 @@ pragma solidity ^0.8.19;
 import "./interfaces/IBetManager.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./Types.sol";
 
 contract BetManager is IBetManager, ReentrancyGuard, Ownable {
     constructor() Ownable(msg.sender) {}
-
-    struct Bet {
-        address user;
-        uint256 amount;
-        bytes32 priceId;
-        int64 entryPrice;
-        uint256 entryTime;
-        uint256 expiryTime;
-        bool isLong;
-        bool won;
-        address resolver;
-        Status status;
-    }
 
     mapping(uint256 => Bet) public bets;
     mapping(address => uint256[]) public userBets;
@@ -92,14 +80,8 @@ contract BetManager is IBetManager, ReentrancyGuard, Ownable {
         emit BetResolved(betId, msg.sender, false, 0);
     }
 
-    function getBet(uint256 betId)
-        external
-        view
-        override
-        returns (address user, uint256 amount, uint256 expiryTime, Status status)
-    {
-        Bet memory bet = bets[betId];
-        return (bet.user, bet.amount, bet.expiryTime, bet.status);
+    function getBet(uint256 betId) external view override returns (Bet memory bet) {
+        bet = bets[betId];
     }
 
     function canResolveBet(uint256 betId) external view override returns (bool) {
@@ -109,9 +91,5 @@ contract BetManager is IBetManager, ReentrancyGuard, Ownable {
 
     function getUserBets(address user) external view returns (uint256[] memory) {
         return userBets[user];
-    }
-
-    function getBetDetails(uint256 betId) external view returns (Bet memory) {
-        return bets[betId];
     }
 }

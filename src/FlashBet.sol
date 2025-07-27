@@ -112,17 +112,16 @@ contract FlashBet is ReentrancyGuard, Ownable {
     function resolveBet(uint256 betId, bytes[] calldata priceUpdateData) external payable nonReentrant {
         require(betManager.canResolveBet(betId), "Cannot resolve");
 
-        // Get bet info
-        (address user, uint256 amount, uint256 expiryTime,) = betManager.getBet(betId);
+        Bet memory bet = betManager.getBet(betId);
 
-        if (block.timestamp - expiryTime > 60) {
+        if (block.timestamp - bet.expiryTime > 60) {
             betManager.cancelBet(betId);
             if (msg.value > 0) {
                 (bool sent,) = msg.sender.call{value: msg.value}("");
                 require(sent, "Refund failed");
             }
-            usdc.safeTransfer(user, amount);
-            liquidityManager.unlockLiquidity(amount * LIQUIDITY_LOCK_RATIO / BASIS_POINTS);
+            usdc.safeTransfer(bet.user, bet.amount);
+            liquidityManager.unlockLiquidity(bet.amount * LIQUIDITY_LOCK_RATIO / BASIS_POINTS);
             emit BetCancelled(betId);
             return;
         }
@@ -143,11 +142,11 @@ contract FlashBet is ReentrancyGuard, Ownable {
         (bool won, uint256 totalPayout) = betManager.resolveBet(betId, exitPrice.price, msg.sender);
 
         // Release locked liquidity
-        uint256 lockAmount = (amount * LIQUIDITY_LOCK_RATIO) / BASIS_POINTS;
+        uint256 lockAmount = (bet.amount * LIQUIDITY_LOCK_RATIO) / BASIS_POINTS;
         liquidityManager.unlockLiquidity(lockAmount);
 
         // Handle payouts and fees
-        _handleBetResolution(user, amount, won, totalPayout, msg.sender);
+        _handleBetResolution(bet.user, bet.amount, won, totalPayout, msg.sender);
 
         emit BetResolved(betId, won);
     }
@@ -197,5 +196,28 @@ contract FlashBet is ReentrancyGuard, Ownable {
             liquidityManager.getAvailableLiquidity(),
             lastPauseTime + pauseInterval
         );
+    }
+
+    function getProviderBalance(address provider) external view returns (uint256 effectiveBalance) {
+        effectiveBalance = liquidityManager.getProviderBalance(provider);
+    }
+
+    function getBetInfo(uint256 betId) external view returns (Bet memory bet) {
+        bet = betManager.getBet(betId);
+    }
+
+    function getUserBets(address user) external view returns (uint256[] memory bets) {
+        bets = betManager.getUserBets(user);
+    }
+
+    function timeUntilWithdrawalWindowOpens() external view returns (uint256 secondsUntilOpen) {
+        uint256 minuteOfDay = (block.timestamp / 60) % 1440;
+        if (minuteOfDay < 1275) {
+            secondsUntilOpen = (1275 - minuteOfDay) * 60;
+        } else if (minuteOfDay >= 1320) {
+            secondsUntilOpen = ((1440 - minuteOfDay) + 1275) * 60;
+        } else {
+            secondsUntilOpen = 0;
+        }
     }
 }
