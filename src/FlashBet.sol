@@ -73,6 +73,9 @@ contract FlashBet is ReentrancyGuard, Ownable {
         _;
     }
 
+    receive() external payable {}
+    fallback() external payable {}
+
     function placeBet(uint256 amount, uint256 duration, bool isLong, bytes[] calldata priceUpdateData)
         external
         payable

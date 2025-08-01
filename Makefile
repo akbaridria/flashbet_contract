@@ -24,6 +24,7 @@ deploy:
 	--verifier-url $(BLOCKSCOUT_VERIFIER_URL)
 
 verify:
-	forge verify-contract --rpc-url $(RPC_URL) \
-	$(CONTRACT_ADDRESS) src/Flashbet.sol:Flashbet \
-	--verifier blockscout --verifier-url $(BLOCKSCOUT_VERIFIER_URL)
+	forge script script/DeployFlashbet.s.sol \
+	--rpc-url $(RPC_URL) --private-key $(PRIVATE_KEY) \
+	--resume --verify --verifier blockscout \
+	--verifier-url $(BLOCKSCOUT_VERIFIER_URL)
