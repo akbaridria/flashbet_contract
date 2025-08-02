@@ -1,4 +1,7 @@
 # FlashBet Protocol
+> **Quick Links:**  
+> [Resolver Example](https://github.com/akbaridria/flashbet_server)  
+> [Flashbet UI](https://github.com/akbaridria/flashbet_ui)
 
 **FlashBet** is a fully decentralized, non-custodial prediction market protocol built on [Etherlink](https://www.etherlink.com/). It is open to anyone to be a trader, liquidity provider, or developer, with robust mechanisms for liquidity safety, fair payouts, and gas-efficient reward distribution. FlashBet uses the [Pyth Network](pyth.network) as its oracle provider for secure and reliable price feeds.
 
