@@ -1,66 +1,49 @@
-## Foundry
+# FlashBet Protocol
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+**FlashBet** is a fully decentralized, non-custodial prediction market protocol built on [Etherlink](https://www.etherlink.com/). It is open to anyone to be a trader, liquidity provider, or developer, with robust mechanisms for liquidity safety, fair payouts, and gas-efficient reward distribution. FlashBet uses the [Pyth Network](pyth.network) as its oracle provider for secure and reliable price feeds.
 
-Foundry consists of:
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## Features
 
-## Documentation
+1. **Locked Liquidity for Guaranteed Payouts**:
+Liquidity is locked for each bet, so winning traders are always paid out.
 
-https://book.getfoundry.sh/
+2. **Liquidity Protection & Utilization Guard**:
+   When the protocol's liquidity utilization rate exceeds 80%, trading is automatically suspended until enough liquidity is released, protecting everyone involved.
 
-## Usage
+3. **Open Community Participation**:
+    - **Traders:** Make predictions to profit.
+    - **Liquidity Providers:** Provide liquidity to earn a share of protocol profits.
+    - **Developers:** Create scripts to resolve bets and earn a 1% resolver fee of each bet value.
 
-### Build
+4. **Efficient Pull-Based Liquidity Mechanism**:
+When the trader loses, their funds are distributed to liquidity providers. Instead of a gas-wasting push model, FlashBet uses a pull-based Batog algorithm (you can read more about it [here](https://batog.info/papers/scalable-reward-distribution.pdf)) that allows providers to claim rewards efficiently.
 
-```shell
-$ forge build
-```
+5. **Fully Decentralized**:
+   Complete core logic on-chain, without any centralized control or custody. Built on Etherlink and powered by Pyth Network oracles.
 
-### Test
 
-```shell
-$ forge test
-```
+## Actors & Flow
 
-### Format
+```mermaid
+sequenceDiagram
+    participant Trader
+    participant LiquidityProvider
+    participant Developer
+    participant FlashBet
+    participant PythNetwork
 
-```shell
-$ forge fmt
-```
 
-### Gas Snapshots
+    Trader->>FlashBet: Place Bet
+    FlashBet->>PythNetwork: Request Price Feed
+    PythNetwork-->>FlashBet: Return Price Data
 
-```shell
-$ forge snapshot
-```
+    LiquidityProvider->>FlashBet: Add/Remove Liquidity
 
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+    Developer->>FlashBet: Resolve Bet
+    FlashBet->>PythNetwork: Request Price Feed
+    PythNetwork-->>FlashBet: Return Price Data
+    FlashBet-->>Trader: Payout (if win)
+    FlashBet-->>Developer: Resolver Fee
+    FlashBet-->>LiquidityProvider: Distribute PnL (if trader loses)
 ```
